@@ -15,53 +15,28 @@ public class MatchController {
     private MatchService matchService;
 
     @GetMapping("")
-    //public List<Mono<MatchModel>> getAllMatches() {
-    public Void getAllMatches() {
+    public List<Mono<MatchModel>> getAllMatches() {
         matchService.SeeWeekMatch();
         return null;
     }
 
-    @GetMapping("/{id}")
-    public Mono<MatchModel> getMatchesByID(@PathVariable Long id) {
-
-    }
-
-    @PostMapping("/update-weekly")
-    public List<Mono<MatchModel>> updateWeekly() {
-
-    }
-
-    @PostMapping("/update-weekly/{id}")
-    public Mono<MatchModel> updateWeeklyByID(@PathVariable Long id) {
-
-    }
-
-}
-
-@RestController
-@RequestMapping("/matches/{league}")
-public class MatchLeagueController {
-    @Autowired
-    private MatchService matchService;
-
-    @GetMapping("")
-    public List<Mono<MatchModel>> getAllMatchesFromLeague(@PathVariable String league) {
-
+    @GetMapping("/next-month")
+    public List<Mono<MatchModel>> getNextMonthMatches() {
+        return null;
     }
 
     @GetMapping("/{id}")
-    public Mono <MatchModel> getMatchesByID(@PathVariable String league, @PathVariable Long id) {
-
+    public Mono<MatchModel> getMatcheById(@PathVariable long id) {
+        return null;
     }
 
-    @PostMapping("/update-weekly")
-    public List<Mono<MatchModel>> updateWeekly(@PathVariable String league) {
-
+    @PutMapping("/{id}")
+    public Mono<MatchModel> setMatcheById(@PathVariable long id) {
+        return null;
     }
 
-    @PostMapping("/update-weekly/{id}")
-    public Mono<MatchModel> updateWeeklyByID(@PathVariable String league, @PathVariable Long id) {
-
+    @DeleteMapping("/{id}")
+    public Mono<MatchModel> deleteMatcheById(@PathVariable long id) {
+        return null;
     }
-
 }

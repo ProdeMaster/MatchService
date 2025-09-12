@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -26,11 +26,17 @@ public class SportmonksAdapter implements FootballApiAdapter{
     }
 
     public List<MatchDto> getWeeklyMatches (){
+        // Fecha de prueba, en las que me aseguro que devuelva al menos 1 partido
+        String todayFormatter = "2025-05-25";
+        String weekFormatter = "2025-06-01";
+
+        /**
          LocalDate today = LocalDate.now();
          String todayFormatter = today.format(formatter);
 
          LocalDate week = today.plusWeeks(1);
          String weekFormatter = week.format(formatter);
+         */
 
         SportmonksApiResponse sportmonksApiResponse = restClient
                 .get()
@@ -52,5 +58,9 @@ public class SportmonksAdapter implements FootballApiAdapter{
             ));
         }
         return weekMatches;
+    }
+    
+    public LocalDateTime parseToLocalDateTime (String date) {
+        return LocalDateTime.parse(date, formatterToDataTime);
     }
 }

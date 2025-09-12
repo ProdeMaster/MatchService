@@ -27,6 +27,8 @@ public class MatchDto {
 
     @Override
     public String toString() {
-        return "MatchDto{id=" + id + ", local-team='" + team1 + "', visiting-team='" + team2 + "', " + "status='" + status +"'}";
+        return "Match id: " + id + "\n" + "League: " + league + "\n" + "Local Team= '" + team1 + "', Visiting Team= '" + team2 + "', " + "status= '" + status +"'" + "\n";
     }
 }
+
+// return "MatchDto{id=" + id + ", local-team='" + team1 + "', visiting-team='" + team2 + "', " + "status='" + status +"'}";

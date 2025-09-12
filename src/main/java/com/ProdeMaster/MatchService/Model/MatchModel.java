@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @RedisHash("Match")
 public class MatchModel implements Serializable {
     @Id
-    private String id;
+    private Long id;
 
     private String team1; //Home Team
     private String team2; //Away Team
@@ -21,12 +21,12 @@ public class MatchModel implements Serializable {
     private Integer scoreTeam1;
     private Integer scoreTeam2;
 
-    private boolean resultConfirmed;
+    private Boolean resultConfirmed;
 
     public MatchModel() {
     }
 
-    public MatchModel(String id, String team1, String team2, String league, LocalDateTime matchDateTime, String status, boolean resultConfirmed) {
+    public MatchModel(Long id, String team1, String team2, String league, LocalDateTime matchDateTime, String status, Boolean resultConfirmed) {
         this.id = id;
         this.team1 = team1;
         this.team2 = team2;
@@ -64,11 +64,11 @@ public class MatchModel implements Serializable {
         return scoreTeam2;
     }
 
-    public boolean isResultConfirmed() {
+    public Boolean isResultConfirmed() {
         return resultConfirmed;
     }
 
-    public void setId(String id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -100,7 +100,7 @@ public class MatchModel implements Serializable {
         this.scoreTeam2 = scoreTeam2;
     }
 
-    public void setResultConfirmed(boolean resultConfirmed) {
+    public void setResultConfirmed(Boolean resultConfirmed) {
         this.resultConfirmed = resultConfirmed;
     }
 }
