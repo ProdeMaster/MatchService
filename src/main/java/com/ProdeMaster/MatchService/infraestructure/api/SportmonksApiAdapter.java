@@ -1,7 +1,8 @@
-package com.ProdeMaster.MatchService.Service.Adapters;
+package com.ProdeMaster.MatchService.infraestructure.api;
 
-import com.ProdeMaster.MatchService.Dto.MatchDto;
-import com.ProdeMaster.MatchService.Sportmonks.Model.SportmonksApiResponse;
+import com.ProdeMaster.MatchService.application.dto.MatchDto;
+import com.ProdeMaster.MatchService.application.port.out.api.FootballApiAdapter;
+import com.ProdeMaster.MatchService.infraestructure.api.dto.SportmonksApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -13,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 @Service
-public class SportmonksAdapter implements FootballApiAdapter{
+public class SportmonksApiAdapter implements FootballApiAdapter {
 
     private final RestClient restClient;
 
@@ -21,7 +22,7 @@ public class SportmonksAdapter implements FootballApiAdapter{
     private String token;
 
     @Autowired
-    public SportmonksAdapter (RestClient restClient) {
+    public SportmonksApiAdapter(RestClient restClient) {
         this.restClient = restClient;
     }
 

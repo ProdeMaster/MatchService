@@ -1,4 +1,4 @@
-package com.ProdeMaster.MatchService.Dto;
+package com.ProdeMaster.MatchService.application.dto;
 
 public class MatchDto {
 

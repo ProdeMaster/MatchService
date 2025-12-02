@@ -1,4 +1,4 @@
-package com.ProdeMaster.MatchService.Sportmonks.Model;
+package com.ProdeMaster.MatchService.infraestructure.api.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
