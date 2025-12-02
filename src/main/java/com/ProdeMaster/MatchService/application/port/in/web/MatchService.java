@@ -1,4 +1,4 @@
-package com.ProdeMaster.MatchService.domain.service;
+package com.ProdeMaster.MatchService.application.port.in.web;
 
 import com.ProdeMaster.MatchService.domain.model.MatchModel;
 import com.ProdeMaster.MatchService.domain.model.MatchStatus;

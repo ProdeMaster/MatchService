@@ -1,12 +1,11 @@
 package com.ProdeMaster.MatchService.application.service;
 
-import com.ProdeMaster.MatchService.domain.event.MatchEventPublisher;
-import com.ProdeMaster.MatchService.domain.event.MatchUpdatedEvent;
+import com.ProdeMaster.MatchService.application.port.in.event.MatchEventPublisher;
 import com.ProdeMaster.MatchService.domain.model.MatchModel;
 import com.ProdeMaster.MatchService.domain.model.MatchStatus;
-import com.ProdeMaster.MatchService.domain.repository.MatchRepository;
-import com.ProdeMaster.MatchService.domain.repository.MatchCacheRepository;
-import com.ProdeMaster.MatchService.domain.service.MatchService;
+import com.ProdeMaster.MatchService.application.port.out.db.MatchRepository;
+import com.ProdeMaster.MatchService.application.port.out.cache.MatchCacheRepository;
+import com.ProdeMaster.MatchService.application.port.in.web.MatchService;
 
 import java.time.LocalDateTime;
 import java.util.List;

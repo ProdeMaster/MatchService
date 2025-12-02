@@ -1,7 +1,7 @@
 package com.ProdeMaster.MatchService.interfaces.rest;
 
 import com.ProdeMaster.MatchService.domain.model.MatchModel;
-import com.ProdeMaster.MatchService.domain.service.MatchService;
+import com.ProdeMaster.MatchService.application.port.in.web.MatchService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;

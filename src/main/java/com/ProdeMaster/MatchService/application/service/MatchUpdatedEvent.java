@@ -1,4 +1,4 @@
-package com.ProdeMaster.MatchService.domain.event;
+package com.ProdeMaster.MatchService.application.service;
 
 import java.time.LocalDateTime;
 import com.ProdeMaster.MatchService.domain.model.MatchStatus;

@@ -1,4 +1,4 @@
-package com.ProdeMaster.MatchService.domain.repository;
+package com.ProdeMaster.MatchService.application.port.out.db;
 
 import com.ProdeMaster.MatchService.domain.model.MatchModel;
 import com.ProdeMaster.MatchService.domain.model.MatchStatus;
