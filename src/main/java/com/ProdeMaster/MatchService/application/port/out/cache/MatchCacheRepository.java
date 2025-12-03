@@ -1,25 +1,31 @@
 package com.ProdeMaster.MatchService.application.port.out.cache;
 
-import com.ProdeMaster.MatchService.domain.model.MatchModel;
+import com.ProdeMaster.MatchService.domain.model.Match;
 import java.util.List;
 import java.util.Optional;
 
 public interface MatchCacheRepository {
-    // Operaciones básicas de caché
-    void cacheMatch(MatchModel match);
-    Optional<MatchModel> getFromCache(Long matchId);
+    // Basic cache operations
+    void cacheMatch(Match match);
+
+    Optional<Match> getFromCache(Long matchId);
+
     void removeFromCache(Long matchId);
+
     void clearCache();
 
-    // Operaciones específicas de caché
-    List<MatchModel> getCachedMatchesByLeague(String league);
-    boolean isMatchCached(Long matchId);
-    void updateCachedMatch(MatchModel match);
+    // Cache specific operations
+    List<Match> getCachedMatchesByLeague(String league);
 
-    // Operaciones de expiración
+    boolean isMatchCached(Long matchId);
+
+    void updateCachedMatch(Match match);
+
+    // Expiration operations
     void setExpirationTime(Long matchId, long seconds);
 
-    // Operaciones de batch
-    void cacheMatches(List<MatchModel> matches);
-    List<MatchModel> getAllCachedMatches();
+    // Batch operations
+    void cacheMatches(List<Match> matches);
+
+    List<Match> getAllCachedMatches();
 }

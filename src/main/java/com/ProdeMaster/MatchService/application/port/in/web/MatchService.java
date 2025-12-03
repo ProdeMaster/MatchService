@@ -1,31 +1,38 @@
 package com.ProdeMaster.MatchService.application.port.in.web;
 
-import com.ProdeMaster.MatchService.domain.model.MatchModel;
+import com.ProdeMaster.MatchService.domain.model.Match;
 import com.ProdeMaster.MatchService.domain.model.MatchStatus;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-
 public interface MatchService {
-    // Operaciones básicas
-    MatchModel createMatch(MatchModel match);
-    Optional<MatchModel> getMatch(Long matchId);
-    List<MatchModel> getAllMatches();
+    // Basic operations
+    Match createMatch(Match match);
 
-    // Operaciones de actualización
-    MatchModel updateMatchScore(Long matchId, Integer homeTeamScore, Integer awayTeamScore);
-    MatchModel updateMatchStatus(Long matchId, MatchStatus newStatus);
-    MatchModel confirmMatchResult(Long matchId);
+    Optional<Match> getMatch(Long matchId);
 
-    // Consultas específicas
-    List<MatchModel> getMatchesByLeague(String league);
-    List<MatchModel> getMatchesByDateRange(LocalDateTime startDate, LocalDateTime endDate);
-    List<MatchModel> getMatchesByStatus(MatchStatus status);
-    List<MatchModel> getMatchesByTeam(String teamName);
+    List<Match> getAllMatches();
 
-    // Operaciones de validación
+    // Update operations
+    Match updateMatchScore(Long matchId, Integer homeTeamScore, Integer awayTeamScore);
+
+    Match updateMatchStatus(Long matchId, MatchStatus newStatus);
+
+    Match confirmMatchResult(Long matchId);
+
+    // Specific queries
+    List<Match> getMatchesByLeague(String league);
+
+    List<Match> getMatchesByDateRange(LocalDateTime startDate, LocalDateTime endDate);
+
+    List<Match> getMatchesByStatus(MatchStatus status);
+
+    List<Match> getMatchesByTeam(String teamName);
+
+    // Validation operations
     boolean isMatchExist(Long matchId);
+
     boolean canUpdateMatch(Long matchId);
 }

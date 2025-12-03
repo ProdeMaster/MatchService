@@ -1,7 +1,7 @@
 package com.ProdeMaster.MatchService.application.service;
 
 import com.ProdeMaster.MatchService.application.port.in.event.MatchEventPublisher;
-import com.ProdeMaster.MatchService.domain.model.MatchModel;
+import com.ProdeMaster.MatchService.domain.model.Match;
 import com.ProdeMaster.MatchService.domain.model.MatchStatus;
 import com.ProdeMaster.MatchService.application.port.out.db.MatchRepository;
 import com.ProdeMaster.MatchService.application.port.out.cache.MatchCacheRepository;
@@ -17,22 +17,23 @@ public class MatchApplicationService implements MatchService {
     private final MatchCacheRepository cacheRepository;
     private final MatchEventPublisher eventPublisher;
 
-    public MatchApplicationService(MatchRepository matchRepository, MatchCacheRepository cacheRepository, MatchEventPublisher eventPublisher) {
+    public MatchApplicationService(MatchRepository matchRepository, MatchCacheRepository cacheRepository,
+            MatchEventPublisher eventPublisher) {
         this.matchRepository = matchRepository;
         this.cacheRepository = cacheRepository;
         this.eventPublisher = eventPublisher;
     }
 
     @Override
-    public MatchModel createMatch(MatchModel match) {
-        MatchModel savedMatch = matchRepository.save(match);
+    public Match createMatch(Match match) {
+        Match savedMatch = matchRepository.save(match);
         cacheRepository.cacheMatch(savedMatch);
         publishMatchUpdate(savedMatch, "Partido creado");
         return savedMatch;
     }
 
     @Override
-    public Optional<MatchModel> getMatch(Long matchId) {
+    public Optional<Match> getMatch(Long matchId) {
         return cacheRepository.getFromCache(matchId)
                 .or(() -> matchRepository.findById(matchId)
                         .map(match -> {
@@ -42,17 +43,16 @@ public class MatchApplicationService implements MatchService {
     }
 
     @Override
-    public List<MatchModel> getAllMatches() {
+    public List<Match> getAllMatches() {
         return matchRepository.findAll();
     }
 
     @Override
-    public MatchModel updateMatchScore(Long matchId, Integer homeTeamScore, Integer awayTeamScore) {
-        Optional<MatchModel> matchOpt = getMatch(matchId);
+    public Match updateMatchScore(Long matchId, Integer homeTeamScore, Integer awayTeamScore) {
+        Optional<Match> matchOpt = getMatch(matchId);
         if (matchOpt.isPresent() && canUpdateMatch(matchId)) {
-            MatchModel match = matchOpt.get();
-            match.setHomeTeamScore(homeTeamScore);
-            match.setAwayTeamScore(awayTeamScore);
+            Match match = matchOpt.get();
+            match.updateScore(homeTeamScore, awayTeamScore);
 
             matchRepository.updateMatchScore(matchId, homeTeamScore, awayTeamScore);
             cacheRepository.updateCachedMatch(match);
@@ -64,11 +64,34 @@ public class MatchApplicationService implements MatchService {
     }
 
     @Override
-    public MatchModel updateMatchStatus(Long matchId, MatchStatus newStatus) {
-        Optional<MatchModel> matchOpt = getMatch(matchId);
+    public Match updateMatchStatus(Long matchId, MatchStatus newStatus) {
+        Optional<Match> matchOpt = getMatch(matchId);
         if (matchOpt.isPresent()) {
-            MatchModel match = matchOpt.get();
-            match.setStatus(newStatus);
+            Match match = matchOpt.get();
+
+            switch (newStatus) {
+                case IN_PROGRESS:
+                    match.start();
+                    break;
+                case SUSPENDED:
+                    match.suspend();
+                    break;
+                case FINISHED:
+                    int home = match.getHomeTeamScore() != null ? match.getHomeTeamScore() : 0;
+                    int away = match.getAwayTeamScore() != null ? match.getAwayTeamScore() : 0;
+                    match.finish(home, away);
+                    break;
+                case SCHEDULED:
+                    if (match.getStatus() == MatchStatus.SUSPENDED) {
+                        match.reschedule(match.getMatchDateTime());
+                    } else if (match.getStatus() != MatchStatus.SCHEDULED) {
+                        throw new IllegalStateException(
+                                "El partido no puede ser reprogramado. Estado actual: " + match.getStatus());
+                    }
+                    break;
+                default:
+                    throw new IllegalArgumentException("Estado no soportado: " + newStatus);
+            }
 
             matchRepository.updateMatchStatus(matchId, newStatus);
             cacheRepository.updateCachedMatch(match);
@@ -80,12 +103,16 @@ public class MatchApplicationService implements MatchService {
     }
 
     @Override
-    public MatchModel confirmMatchResult(Long matchId) {
-        Optional<MatchModel> matchOpt = getMatch(matchId);
+    public Match confirmMatchResult(Long matchId) {
+        Optional<Match> matchOpt = getMatch(matchId);
         if (matchOpt.isPresent()) {
-            MatchModel match = matchOpt.get();
-            match.setResultConfirmed(true);
-            match.setStatus(MatchStatus.FINISHED);
+            Match match = matchOpt.get();
+            if (match.getStatus() != MatchStatus.FINISHED) {
+                int home = match.getHomeTeamScore() != null ? match.getHomeTeamScore() : 0;
+                int away = match.getAwayTeamScore() != null ? match.getAwayTeamScore() : 0;
+                match.finish(home, away);
+            }
+            match.confirmResult();
 
             matchRepository.confirmMatchResult(matchId);
             cacheRepository.updateCachedMatch(match);
@@ -97,22 +124,22 @@ public class MatchApplicationService implements MatchService {
     }
 
     @Override
-    public List<MatchModel> getMatchesByLeague(String league) {
+    public List<Match> getMatchesByLeague(String league) {
         return matchRepository.findByLeague(league);
     }
 
     @Override
-    public List<MatchModel> getMatchesByDateRange(LocalDateTime startDate, LocalDateTime endDate) {
+    public List<Match> getMatchesByDateRange(LocalDateTime startDate, LocalDateTime endDate) {
         return matchRepository.findByDateRange(startDate, endDate);
     }
 
     @Override
-    public List<MatchModel> getMatchesByStatus(MatchStatus status) {
+    public List<Match> getMatchesByStatus(MatchStatus status) {
         return matchRepository.findByStatus(status);
     }
 
     @Override
-    public List<MatchModel> getMatchesByTeam(String teamName) {
+    public List<Match> getMatchesByTeam(String teamName) {
         return matchRepository.findByTeam(teamName);
     }
 
@@ -123,12 +150,12 @@ public class MatchApplicationService implements MatchService {
 
     @Override
     public boolean canUpdateMatch(Long matchId) {
-        Optional<MatchModel> match = getMatch(matchId);
+        Optional<Match> match = getMatch(matchId);
         return match.map(m -> !MatchStatus.FINISHED.equals(m.getStatus()))
                 .orElse(false);
     }
 
-    private void publishMatchUpdate(MatchModel match, String description) {
+    private void publishMatchUpdate(Match match, String description) {
         MatchUpdatedEvent event = new MatchUpdatedEvent(
                 match.getMatchId(),
                 match.getHomeTeam(),
@@ -137,8 +164,7 @@ public class MatchApplicationService implements MatchService {
                 match.getAwayTeamScore(),
                 match.getStatus(),
                 LocalDateTime.now(),
-                description
-        );
+                description);
         eventPublisher.publish(event);
     }
 }
