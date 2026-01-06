@@ -1,4 +1,4 @@
-package com.ProdeMaster.MatchService.infraestructure.adapter.out.sportmonks;
+package com.ProdeMaster.MatchService.infraestructure.adapter.mapper;
 
 import com.ProdeMaster.MatchService.domain.model.Match;
 import com.ProdeMaster.MatchService.domain.model.MatchStatus;
@@ -21,34 +21,21 @@ public class MatchMapper {
 
     /**
      * Maps from domain Match to persistence MatchEntity.
-     * 
      * Note: This mapping is lossy - the new MatchEntity structure doesn't have
      * all the fields from the domain Match. This is intentional as MatchEntity
      * is designed to store data from external API, not domain state.
      */
     @NonNull
-    public MatchEntity toEntity(@NonNull Match match) {
-        MatchEntity entity = new MatchEntity();
+    public MatchEntity toEntity(@NonNull Match match, Long homeTeamID, Long awayTeamID) {
+        MatchEntity newMatch = new MatchEntity();
 
-        // Map ID
-        entity.setId(match.getMatchId());
+        newMatch.setId(match.getMatchId());
+        newMatch.setStartingAt(match.getMatchDateTime());
+        newMatch.setStatusId(mapMatchStatusToStatusId(match.getStatus()));
 
-        // Map temporal fields
-        entity.setStartingAt(match.getMatchDateTime());
-        if (match.getMatchDateTime() != null) {
-            entity.setStartingAtTimestamp(
-                    match.getMatchDateTime().atZone(java.time.ZoneId.systemDefault()).toEpochSecond());
-        }
-
-        // Map state - convert MatchStatus enum to Integer stateId
-        // This is a simplified mapping - you may need to adjust based on your state ID
-        // scheme
-        entity.setStateId(mapMatchStatusToStateId(match.getStatus()));
-
-        // Map match name from teams (domain uses homeTeam/awayTeam, persistence uses
-        // name)
         if (match.getHomeTeam() != null && match.getAwayTeam() != null) {
-            entity.setName(match.getHomeTeam() + " vs " + match.getAwayTeam());
+            newMatch.setHomeTeamId(homeTeamID);
+            newMatch.setAwayTeamId(awayTeamID);
         }
 
         // Map league - domain uses String, persistence uses Integer ID
@@ -56,20 +43,16 @@ public class MatchMapper {
         // This should be populated when fetching from external API
         if (match.getLeague() != null) {
             // TODO: Implement league name to ID mapping if needed
-            // entity.setLeagueId(mapLeagueNameToId(match.getLeague()));
+            // newMatch.setLeagueId(mapLeagueNameToId(match.getLeague()));
         }
 
         // Map result info from scores
         if (match.getHomeTeamScore() != null && match.getAwayTeamScore() != null) {
-            entity.setResultInfo(match.getHomeTeamScore() + " - " + match.getAwayTeamScore());
+            newMatch.setAwayTeamScore(match.getAwayTeamScore());
+            newMatch.setHomeTeamScore(match.getHomeTeamScore());
         }
 
-        // Set default values for API-specific fields
-        entity.setPlaceholder(false);
-        entity.setHasOdds(false);
-        entity.setHasPremiumOdds(false);
-
-        return entity;
+        return newMatch;
     }
 
     /**
@@ -107,7 +90,7 @@ public class MatchMapper {
         }
 
         // Map state ID to MatchStatus
-        MatchStatus status = mapStateIdToMatchStatus(entity.getStateId());
+        MatchStatus status = mapStateIdToMatchStatus(entity.getStatusId());
 
         // Reconstruct domain Match
         Match match = Match.reconstitute(
@@ -139,48 +122,46 @@ public class MatchMapper {
 
     /**
      * Maps MatchStatus enum to state ID.
-     * 
      * This is a simplified mapping. You should adjust based on your actual
      * state ID scheme from the external API.
      */
-    private Integer mapMatchStatusToStateId(MatchStatus status) {
+    static public Long mapMatchStatusToStatusId(MatchStatus status) {
         if (status == null) {
-            return 1; // Default to NS (Not Started)
+            return 1L; // Default to NS (Not Started)
         }
 
         // Simple mapping - adjust based on your actual API state IDs
         return switch (status) {
-            case PENDING -> 0;
-            case TBA -> 1;
-            case NS -> 1;
-            case INPLAY_1ST_HALF -> 2;
-            case HT -> 3;
-            case INPLAY_2ND_HALF -> 4;
-            case FT -> 5;
-            case INPLAY_ET -> 6;
-            case EXTRA_TIME_BREAK -> 7;
-            case INPLAY_ET_2ND_HALF -> 8;
-            case AET -> 9;
-            case INPLAY_PENALTIES -> 10;
-            case PEN_BREAK -> 11;
-            case FT_PEN -> 12;
-            case DELAYED -> 13;
-            case POSTPONED -> 14;
-            case SUSPENDED -> 15;
-            case INTERRUPTED -> 16;
-            case AWARDED -> 17;
-            case WO -> 18;
-            case CANCELLED -> 19;
-            case ABANDONED -> 20;
-            case DELETED -> 21;
-            case AWAITING_UPDATES -> 22;
-            default -> 1; // Default to NS state
+            case PENDING -> 0L;
+            case TBA -> 1L;
+            case NS -> 1L;
+            case INPLAY_1ST_HALF -> 2L;
+            case HT -> 3L;
+            case INPLAY_2ND_HALF -> 4L;
+            case FT -> 5L;
+            case INPLAY_ET -> 6L;
+            case EXTRA_TIME_BREAK -> 7L;
+            case INPLAY_ET_2ND_HALF -> 8L;
+            case AET -> 9L;
+            case INPLAY_PENALTIES -> 10L;
+            case PEN_BREAK -> 11L;
+            case FT_PEN -> 12L;
+            case DELAYED -> 13L;
+            case POSTPONED -> 14L;
+            case SUSPENDED -> 15L;
+            case INTERRUPTED -> 16L;
+            case AWARDED -> 17L;
+            case WO -> 18L;
+            case CANCELLED -> 19L;
+            case ABANDONED -> 20L;
+            case DELETED -> 21L;
+            case AWAITING_UPDATES -> 22L;
+            default -> 1L; // Default to NS state
         };
     }
 
     /**
      * Maps state ID to MatchStatus enum.
-     * 
      * This is the reverse of mapMatchStatusToStateId.
      */
     private MatchStatus mapStateIdToMatchStatus(Integer stateId) {
