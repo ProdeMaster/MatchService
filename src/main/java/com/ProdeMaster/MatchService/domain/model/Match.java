@@ -43,6 +43,27 @@ public class Match implements Serializable {
         this.resultConfirmed = false;
     }
 
+    /**
+     * Recommended method to avoid breaking historical data and unwanted exceptions
+     * Used only by MatchMapper
+     */
+    public static Match reconstitute(Long matchId, String homeTeam, String awayTeam, String league,
+            LocalDateTime matchDateTime, MatchStatus status, MatchStatus previousStatus,
+            Integer homeTeamScore, Integer awayTeamScore, Boolean resultConfirmed) {
+        Match match = new Match();
+        match.matchId = matchId;
+        match.homeTeam = homeTeam;
+        match.awayTeam = awayTeam;
+        match.league = league;
+        match.matchDateTime = matchDateTime;
+        match.status = status;
+        match.previousStatus = previousStatus;
+        match.homeTeamScore = homeTeamScore;
+        match.awayTeamScore = awayTeamScore;
+        match.resultConfirmed = resultConfirmed;
+        return match;
+    }
+
     // ==================== INITIAL STATE TRANSITIONS ====================
 
     public void setToBeAnnounced() {
