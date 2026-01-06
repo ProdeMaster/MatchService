@@ -3,6 +3,7 @@ package com.ProdeMaster.MatchService.application.service;
 import com.ProdeMaster.MatchService.application.port.in.event.MatchEventPublisher;
 import com.ProdeMaster.MatchService.domain.model.Match;
 import com.ProdeMaster.MatchService.domain.model.MatchStatus;
+import com.ProdeMaster.MatchService.domain.exception.InvalidMatchStateTransitionException;
 import com.ProdeMaster.MatchService.application.port.out.db.MatchRepository;
 import com.ProdeMaster.MatchService.application.port.out.cache.MatchCacheRepository;
 import com.ProdeMaster.MatchService.application.port.in.web.MatchService;
@@ -69,35 +70,97 @@ public class MatchApplicationService implements MatchService {
         if (matchOpt.isPresent()) {
             Match match = matchOpt.get();
 
-            switch (newStatus) {
-                case IN_PROGRESS:
-                    match.start();
-                    break;
-                case SUSPENDED:
-                    match.suspend();
-                    break;
-                case FINISHED:
-                    int home = match.getHomeTeamScore() != null ? match.getHomeTeamScore() : 0;
-                    int away = match.getAwayTeamScore() != null ? match.getAwayTeamScore() : 0;
-                    match.finish(home, away);
-                    break;
-                case SCHEDULED:
-                    if (match.getStatus() == MatchStatus.SUSPENDED) {
-                        match.reschedule(match.getMatchDateTime());
-                    } else if (match.getStatus() != MatchStatus.SCHEDULED) {
-                        throw new IllegalStateException(
-                                "El partido no puede ser reprogramado. Estado actual: " + match.getStatus());
-                    }
-                    break;
-                default:
-                    throw new IllegalArgumentException("Estado no soportado: " + newStatus);
+            try {
+                switch (newStatus) {
+                    // Initial states
+                    case TBA:
+                        match.setToBeAnnounced();
+                        break;
+                    case NS:
+                        match.setNotStarted();
+                        break;
+
+                    // Normal match flow
+                    case INPLAY_1ST_HALF:
+                        match.startFirstHalf();
+                        break;
+                    case HT:
+                        match.endFirstHalf();
+                        break;
+                    case INPLAY_2ND_HALF:
+                        match.startSecondHalf();
+                        break;
+                    case FT:
+                        match.endRegularTime();
+                        break;
+
+                    // Extra time
+                    case INPLAY_ET:
+                        match.startExtraTime();
+                        break;
+                    case EXTRA_TIME_BREAK:
+                        match.breakExtraTime();
+                        break;
+                    case INPLAY_ET_2ND_HALF:
+                        match.startExtraTimeSecondHalf();
+                        break;
+                    case AET:
+                        match.endExtraTime();
+                        break;
+
+                    // Penalties
+                    case INPLAY_PENALTIES:
+                        match.startPenalties();
+                        break;
+                    case PEN_BREAK:
+                        match.breakPenalties();
+                        break;
+                    case FT_PEN:
+                        match.endPenalties();
+                        break;
+
+                    // Administrative - delays
+                    case DELAYED:
+                        match.delay();
+                        break;
+                    case POSTPONED:
+                        match.postpone();
+                        break;
+
+                    // Administrative - suspensions/interruptions
+                    case SUSPENDED:
+                        match.suspend();
+                        break;
+                    case INTERRUPTED:
+                        match.interrupt();
+                        break;
+
+                    // Administrative - terminal
+                    case CANCELLED:
+                        match.cancel();
+                        break;
+                    case ABANDONED:
+                        match.abandon();
+                        break;
+                    case DELETED:
+                        match.delete();
+                        break;
+                    case AWAITING_UPDATES:
+                        match.markAwaitingUpdates();
+                        break;
+
+                    default:
+                        throw new IllegalArgumentException("Estado no soportado: " + newStatus);
+                }
+
+                matchRepository.updateMatchStatus(matchId, newStatus);
+                cacheRepository.updateCachedMatch(match);
+
+                publishMatchUpdate(match, "Estado actualizado a: " + newStatus);
+                return match;
+            } catch (InvalidMatchStateTransitionException e) {
+                throw new IllegalStateException("Transición de estado inválida: " + e.getMessage(), e);
             }
-
-            matchRepository.updateMatchStatus(matchId, newStatus);
-            cacheRepository.updateCachedMatch(match);
-
-            publishMatchUpdate(match, "Estado actualizado a: " + newStatus);
-            return match;
         }
         throw new IllegalStateException("Partido no encontrado: " + matchId);
     }
@@ -107,11 +170,6 @@ public class MatchApplicationService implements MatchService {
         Optional<Match> matchOpt = getMatch(matchId);
         if (matchOpt.isPresent()) {
             Match match = matchOpt.get();
-            if (match.getStatus() != MatchStatus.FINISHED) {
-                int home = match.getHomeTeamScore() != null ? match.getHomeTeamScore() : 0;
-                int away = match.getAwayTeamScore() != null ? match.getAwayTeamScore() : 0;
-                match.finish(home, away);
-            }
             match.confirmResult();
 
             matchRepository.confirmMatchResult(matchId);
@@ -151,10 +209,13 @@ public class MatchApplicationService implements MatchService {
     @Override
     public boolean canUpdateMatch(Long matchId) {
         Optional<Match> match = getMatch(matchId);
-        return match.map(m -> !MatchStatus.FINISHED.equals(m.getStatus()))
+        return match
+                .map(m -> m.getStatus() != MatchStatus.FT && m.getStatus() != MatchStatus.AET
+                        && m.getStatus() != MatchStatus.FT_PEN)
                 .orElse(false);
     }
 
+    // ========= MOVER A UNA CLASE PROPIA PARA EVENTOS ========
     private void publishMatchUpdate(Match match, String description) {
         MatchUpdatedEvent event = new MatchUpdatedEvent(
                 match.getMatchId(),
