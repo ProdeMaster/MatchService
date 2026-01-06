@@ -11,13 +11,13 @@ public class MatchEntity {
     private Long id;
 
     @Column(name = "provider_id")
-    private String providerId;
+    private Long providerId;
 
     @Column(name = "league_id")
-    private Integer leagueId;
+    private Long leagueId;
 
-    @Column(name = "state_id")
-    private Integer stateId;
+    @Column(name = "status_id")
+    private Long statusId;
 
     private Integer season;
 
@@ -26,10 +26,10 @@ public class MatchEntity {
     private Long round;
 
     @Column(name = "home_team_id")
-    private String homeTeamId;
+    private Long homeTeamId;
 
     @Column(name = "away_team_id")
-    private String awayTeamId;
+    private Long awayTeamId;
 
     @Column(name = "home_team_score")
     private Integer homeTeamScore;
@@ -44,10 +44,10 @@ public class MatchEntity {
     public MatchEntity() {
     }
 
-    public MatchEntity(String providerId, Integer leagueId, Integer stateId, Integer season, Long group, Long round, String homeTeamId, String awayTeamId, Integer homeTeamScore, Integer awayTeamScore, LocalDateTime startingAt) {
+    public MatchEntity(Long providerId, Long leagueId, Long statusId, Integer season, Long group, Long round, Long homeTeamId, Long awayTeamId, Integer homeTeamScore, Integer awayTeamScore, LocalDateTime startingAt) {
         this.providerId = providerId;
         this.leagueId = leagueId;
-        this.stateId = stateId;
+        this.statusId = statusId;
         this.season = season;
         this.group = group;
         this.round = round;
@@ -62,28 +62,32 @@ public class MatchEntity {
         return id;
     }
 
-    public String getProviderId() {
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Long getProviderId() {
         return providerId;
     }
 
-    public void setProviderId(String providerId) {
+    public void setProviderId(Long providerId) {
         this.providerId = providerId;
     }
 
-    public Integer getLeagueId() {
+    public Long getLeagueId() {
         return leagueId;
     }
 
-    public void setLeagueId(Integer leagueId) {
+    public void setLeagueId(Long leagueId) {
         this.leagueId = leagueId;
     }
 
-    public Integer getStateId() {
-        return stateId;
+    public Long getStatusId() {
+        return statusId;
     }
 
-    public void setStateId(Integer stateId) {
-        this.stateId = stateId;
+    public void setStatusId(Long statusId) {
+        this.statusId = statusId;
     }
 
     public Integer getSeason() {
@@ -110,19 +114,19 @@ public class MatchEntity {
         this.round = round;
     }
 
-    public String getHomeTeamId() {
+    public Long getHomeTeamId() {
         return homeTeamId;
     }
 
-    public void setHomeTeamId(String homeTeamId) {
+    public void setHomeTeamId(Long homeTeamId) {
         this.homeTeamId = homeTeamId;
     }
 
-    public String getAwayTeamId() {
+    public Long getAwayTeamId() {
         return awayTeamId;
     }
 
-    public void setAwayTeamId(String awayTeamId) {
+    public void setAwayTeamId(Long awayTeamId) {
         this.awayTeamId = awayTeamId;
     }
 
