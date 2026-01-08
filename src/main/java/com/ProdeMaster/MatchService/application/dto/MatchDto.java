@@ -7,7 +7,7 @@ public class MatchDto {
     private String team2;
     private String league;
     private String matchDateTime;
-    private String status; // Ejemplo: "scheduled", "in_progress", "finished"
+    private String status;
 
     public MatchDto(Long id, String team1, String team2, String league, String matchDateTime, String status) {
         this.id = id;
