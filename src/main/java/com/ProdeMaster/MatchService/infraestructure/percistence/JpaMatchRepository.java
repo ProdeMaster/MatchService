@@ -4,44 +4,48 @@ import com.ProdeMaster.MatchService.application.port.out.db.MatchRepository;
 import com.ProdeMaster.MatchService.domain.model.Match;
 import com.ProdeMaster.MatchService.domain.model.MatchStatus;
 import com.ProdeMaster.MatchService.infraestructure.entity.MatchEntity;
-import com.ProdeMaster.MatchService.infraestructure.projection.TeamIdProjection;
 import com.ProdeMaster.MatchService.infraestructure.adapter.mapper.MatchMapper;
-
+import com.ProdeMaster.MatchService.infraestructure.entity.TeamEntity;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Repository
 public class JpaMatchRepository implements MatchRepository {
     private final SpringDataMatchRepository jpaRepository;
     private final MatchMapper mapper;
 
-    private JpaTeamRepository jpaTeamRepository;
+    private final SpringDataTeamRepository jpaTeamRepository;
 
-    public JpaMatchRepository(SpringDataMatchRepository jpaRepository, MatchMapper mapper) {
+    public JpaMatchRepository(SpringDataMatchRepository jpaRepository, MatchMapper mapper,
+            SpringDataTeamRepository jpaTeamRepository) {
         this.jpaRepository = jpaRepository;
         this.mapper = mapper;
+        this.jpaTeamRepository = jpaTeamRepository;
     }
 
     @Override
     public Match save(Match match) {
 
-        // RESOLVER CON BATCH LOCKUP (INFO EN CHATGPT)
-        Long homeTeamId = getTeamIDFromName(match.getHomeTeam());
-        Long awayTeamId = getTeamIDFromName(match.getAwayTeam());
+        Map<String, Long> teamsNames = resolveTeamIds(match);
 
-        Map<Long, String> teamsNames = 
+        if (teamsNames.get(match.getHomeTeam()) == null || teamsNames.get(match.getAwayTeam()) == null) {
+            throw new IllegalArgumentException("Teams not found");
+        }
 
-        MatchEntity savedEntity = jpaRepository.save(mapper.toEntity(match, homeTeamId, awayTeamId));
+        MatchEntity savedEntity = jpaRepository
+                .save(mapper.toEntity(match, teamsNames.get(match.getHomeTeam()), teamsNames.get(match.getAwayTeam())));
         return mapper.toDomain(savedEntity);
     }
 
     @Override
     public Optional<Match> findById(Long matchId) {
+        if (matchId == null) {
+            throw new IllegalArgumentException("Match ID cannot be null");
+        }
         return jpaRepository.findById(matchId)
                 .map(mapper::toDomain);
     }
@@ -53,6 +57,9 @@ public class JpaMatchRepository implements MatchRepository {
 
     @Override
     public void deleteById(Long matchId) {
+        if (matchId == null) {
+            throw new IllegalArgumentException("Match ID cannot be null");
+        }
         jpaRepository.deleteById(matchId);
     }
 
@@ -76,9 +83,8 @@ public class JpaMatchRepository implements MatchRepository {
 
     @Override
     public List<Match> findByStatus(MatchStatus status) {
-        // Convert MatchStatus to stateId and query
-        Integer stateId = mapMatchStatusToStateId(status);
-        return jpaRepository.findByStateId(stateId).stream()
+        Long statusId = MatchMapper.mapMatchStatusToStatusId(status);
+        return jpaRepository.findByStatusId(statusId).stream()
                 .map(mapper::toDomain)
                 .toList();
     }
@@ -92,6 +98,9 @@ public class JpaMatchRepository implements MatchRepository {
 
     @Override
     public boolean existsById(Long matchId) {
+        if (matchId == null) {
+            throw new IllegalArgumentException("Match ID cannot be null");
+        }
         return jpaRepository.existsById(matchId);
     }
 
@@ -123,10 +132,10 @@ public class JpaMatchRepository implements MatchRepository {
     /**
      * Helper method to get TeamID from name
      */
-    private Long getTeamIDFromName(String nameTeam) {
-        // Logica para obtener Nombre de equipo
+    @SuppressWarnings("unused")
+    private Long getTeamIdFromName(String nameTeam) {
         try {
-            return jpaTeamRepository.findByName(nameTeam).get(0).getId();
+            return jpaTeamRepository.findByName(nameTeam).map(TeamEntity::getId).orElseThrow();
         } catch (Exception e) {
             System.out.println(e.toString());
         }
@@ -142,10 +151,6 @@ public class JpaMatchRepository implements MatchRepository {
                 match.getHomeTeam(),
                 match.getAwayTeam());
 
-        return SpringDataTeamRepository.findIdsByNames(names)
-                .stream()
-                .collect(Collectors.toMap(
-                        TeamIdProjection::name,
-                        TeamIdProjection::id));
+        return jpaTeamRepository.findIdsByNames(names);
     }
 }

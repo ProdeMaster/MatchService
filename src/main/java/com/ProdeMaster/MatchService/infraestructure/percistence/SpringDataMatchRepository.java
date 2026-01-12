@@ -12,10 +12,10 @@ import java.util.List;
 public interface SpringDataMatchRepository extends JpaRepository<MatchEntity, Long> {
 
     // Find matches by league ID
-    List<MatchEntity> findByLeagueId(Integer leagueId);
+    List<MatchEntity> findByLeagueId(Long leagueId);
 
-    // Find matches by state ID
-    List<MatchEntity> findByStateId(Integer stateId);
+    // Find matches by status ID
+    List<MatchEntity> findByStatusId(Long statusId);
 
     // Find matches by date range
     @Query("SELECT m FROM MatchEntity m WHERE m.startingAt BETWEEN :startDate AND :endDate")
