@@ -1,31 +1,21 @@
 package com.ProdeMaster.MatchService.application.port.out.cache;
 
 import com.ProdeMaster.MatchService.domain.model.Match;
-import java.util.List;
-import java.util.Optional;
+import reactor.core.publisher.Mono;
+
+import java.time.Duration;
 
 public interface MatchCacheRepository {
-    // Basic cache operations
-    void cacheMatch(Match match);
 
-    Optional<Match> getFromCache(Long matchId);
+    Mono<Match> getMatch(Long matchId);
 
-    void removeFromCache(Long matchId);
+    Mono<Void> cacheMatch(Match match);
 
-    void clearCache();
+    Mono<Void> cacheMatch(Match match, Duration ttl);
 
-    // Cache specific operations
-    List<Match> getCachedMatchesByLeague(String league);
+    Mono<Void> updateCachedMatch(Match match);
 
-    boolean isMatchCached(Long matchId);
+    Mono<Void> evictMatch(Long matchId);
 
-    void updateCachedMatch(Match match);
-
-    // Expiration operations
-    void setExpirationTime(Long matchId, long seconds);
-
-    // Batch operations
-    void cacheMatches(List<Match> matches);
-
-    List<Match> getAllCachedMatches();
+    Mono<Boolean> exists(Long matchId);
 }

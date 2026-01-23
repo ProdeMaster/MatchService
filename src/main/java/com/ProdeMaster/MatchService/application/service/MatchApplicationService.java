@@ -28,19 +28,21 @@ public class MatchApplicationService implements MatchService {
     @Override
     public Match createMatch(Match match) {
         Match savedMatch = matchRepository.save(match);
-        cacheRepository.cacheMatch(savedMatch);
+        cacheRepository.cacheMatch(savedMatch).block();
         publishMatchUpdate(savedMatch, "Partido creado");
         return savedMatch;
     }
 
     @Override
     public Optional<Match> getMatch(Long matchId) {
-        return cacheRepository.getFromCache(matchId)
-                .or(() -> matchRepository.findById(matchId)
-                        .map(match -> {
-                            cacheRepository.cacheMatch(match);
-                            return match;
-                        }));
+        Match cached = cacheRepository.getMatch(matchId).block();
+        if (cached != null) {
+            return Optional.of(cached);
+        }
+
+        Optional<Match> matchOpt = matchRepository.findById(matchId);
+        matchOpt.ifPresent(match -> cacheRepository.cacheMatch(match).block());
+        return matchOpt;
     }
 
     @Override
@@ -56,7 +58,7 @@ public class MatchApplicationService implements MatchService {
             match.updateScore(homeTeamScore, awayTeamScore);
 
             matchRepository.updateMatchScore(matchId, homeTeamScore, awayTeamScore);
-            cacheRepository.updateCachedMatch(match);
+            cacheRepository.updateCachedMatch(match).block();
 
             publishMatchUpdate(match, "Marcador actualizado");
             return match;
@@ -154,7 +156,7 @@ public class MatchApplicationService implements MatchService {
                 }
 
                 matchRepository.updateMatchStatus(matchId, newStatus);
-                cacheRepository.updateCachedMatch(match);
+                cacheRepository.updateCachedMatch(match).block();
 
                 publishMatchUpdate(match, "Estado actualizado a: " + newStatus);
                 return match;
@@ -173,7 +175,7 @@ public class MatchApplicationService implements MatchService {
             match.confirmResult();
 
             matchRepository.confirmMatchResult(matchId);
-            cacheRepository.updateCachedMatch(match);
+            cacheRepository.updateCachedMatch(match).block();
 
             publishMatchUpdate(match, "Resultado confirmado");
             return match;
