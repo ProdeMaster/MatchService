@@ -12,16 +12,16 @@ public class SportmonksResponseConfig {
     @Value("${sportmonks.baseUrl}")
     private String baseUrl;
 
-//    @Value("${sportmonks.token}")
-//    private String token;
+    // @Value("${sportmonks.token}")
+    // private String token;
 
     @Bean
-    public RestClient SportmonksRestClient () {
+    public RestClient SportmonksRestClient() {
         return RestClient
                 .builder()
                 .baseUrl(baseUrl)
                 .requestFactory(new HttpComponentsClientHttpRequestFactory())
-//                .defaultUriVariables(Map.of("api_token", token))
+                // .defaultUriVariables(Map.of("api_token", token))
                 .build();
     }
 }
