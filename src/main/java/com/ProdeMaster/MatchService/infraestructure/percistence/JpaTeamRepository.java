@@ -3,7 +3,6 @@ package com.ProdeMaster.MatchService.infraestructure.percistence;
 import com.ProdeMaster.MatchService.application.port.out.db.TeamRepository;
 import com.ProdeMaster.MatchService.domain.projection.TeamSnapshot;
 import com.ProdeMaster.MatchService.infraestructure.adapter.mapper.TeamMapper;
-import com.ProdeMaster.MatchService.infraestructure.entity.TeamEntity;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
@@ -20,13 +19,16 @@ public class JpaTeamRepository implements TeamRepository {
 
     @Override
     public Optional<TeamSnapshot> findByName(String homeTeam) {
-        TeamEntity teamEntity = teamRepository.findByName(homeTeam).get();
-        return teamMapper.toTeamSnapshot(teamEntity);
+        return teamRepository.findByName(homeTeam)
+                .flatMap(teamMapper::toTeamSnapshot);
     }
 
     @Override
-    public Optional<TeamSnapshot> findById(Long TeamId) {
-        TeamEntity teamEntity = teamRepository.findById(TeamId).get();
-        return teamMapper.toTeamSnapshot(teamEntity);
+    public Optional<TeamSnapshot> findById(Long teamId) {
+        if (teamId == null) {
+            return Optional.empty();
+        }
+        return teamRepository.findById(teamId)
+                .flatMap(teamMapper::toTeamSnapshot);
     }
 }

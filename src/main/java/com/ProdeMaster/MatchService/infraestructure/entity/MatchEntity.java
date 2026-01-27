@@ -13,6 +13,9 @@ public class MatchEntity {
     @Column(name = "provider_id")
     private Long providerId;
 
+    @Column(name = "external_match_id")
+    private Long externalMatchId;
+
     @Column(name = "league_id")
     private Long leagueId;
 
@@ -39,7 +42,6 @@ public class MatchEntity {
 
     @Column(name = "starting_at")
     private LocalDateTime startingAt;
-
 
     public MatchEntity() {
     }
@@ -72,6 +74,14 @@ public class MatchEntity {
 
     public void setProviderId(Long providerId) {
         this.providerId = providerId;
+    }
+
+    public Long getExternalMatchId() {
+        return externalMatchId;
+    }
+
+    public void setExternalMatchId(Long externalMatchId) {
+        this.externalMatchId = externalMatchId;
     }
 
     public Long getLeagueId() {

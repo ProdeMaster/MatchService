@@ -12,8 +12,6 @@ import java.util.Optional;
 public interface SpringDataTeamRepository extends JpaRepository<TeamEntity, Long> {
     Optional<TeamEntity> findByName(String name);
 
-    Optional<TeamEntity> findById(Long id);
-
     @Query("""
             SELECT new com.ProdeMaster.MatchService.infraestructure.projection.TeamIdProjection(t.name, t.id)
             FROM TeamEntity t
