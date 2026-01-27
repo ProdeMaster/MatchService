@@ -28,6 +28,13 @@ public interface MatchRepository {
 
     boolean existsById(Long matchId);
 
+    // Provider ID queries (for SportMonks sync)
+    boolean existsByProviderId(Long providerId);
+
+    Optional<Match> findByProviderId(Long providerId);
+
+    Optional<Match> findByProviderIdAndExternalMatchId(Long providerId, Long externalMatchId);
+
     // Specific update operations
     void updateMatchScore(Long matchId, Integer homeTeamScore, Integer awayTeamScore);
 

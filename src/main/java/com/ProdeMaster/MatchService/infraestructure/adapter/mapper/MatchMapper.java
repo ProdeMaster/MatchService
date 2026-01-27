@@ -7,29 +7,16 @@ import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 
-/**
- * Mapper to convert between Match domain objects and MatchEntity persistence
- * objects.
- * Acts as an anti-corruption layer to maintain hexagonal architecture.
- * 
- * This mapper bridges the impedance mismatch between:
- * - Domain model: Match with business logic and MatchStatus state machine
- * - Persistence model: MatchEntity aligned with external API structure
- */
 @Component
 public class MatchMapper {
 
-    /**
-     * Maps from domain Match to persistence MatchEntity.
-     * Note: This mapping is lossy - the new MatchEntity structure doesn't have
-     * all the fields from the domain Match. This is intentional as MatchEntity
-     * is designed to store data from external API, not domain state.
-     */
     @NonNull
     public MatchEntity toEntity(@NonNull Match match, Long homeTeamID, Long awayTeamID) {
         MatchEntity newMatch = new MatchEntity();
 
         newMatch.setId(match.getMatchId());
+        newMatch.setProviderId(1L); // SportMonks provider ID
+        newMatch.setExternalMatchId(match.getMatchId()); // SportMonks match ID
         newMatch.setStartingAt(match.getMatchDateTime());
         newMatch.setStatusId(mapMatchStatusToStatusId(match.getStatus()));
 
@@ -38,15 +25,6 @@ public class MatchMapper {
             newMatch.setAwayTeamId(awayTeamID);
         }
 
-        // Map league - domain uses String, persistence uses Integer ID
-        // For now, we'll leave leagueId null as we don't have the mapping
-        // This should be populated when fetching from external API
-        if (match.getLeague() != null) {
-            // TODO: Implement league name to ID mapping if needed
-            // newMatch.setLeagueId(mapLeagueNameToId(match.getLeague()));
-        }
-
-        // Map result info from scores
         if (match.getHomeTeamScore() != null && match.getAwayTeamScore() != null) {
             newMatch.setAwayTeamScore(match.getAwayTeamScore());
             newMatch.setHomeTeamScore(match.getHomeTeamScore());
@@ -55,55 +33,27 @@ public class MatchMapper {
         return newMatch;
     }
 
-    /**
-     * Maps from persistence MatchEntity to domain Match.
-     * 
-     * This reconstructs the domain model from the persistence structure.
-     * Some domain fields may need to be derived or defaulted.
-     */
     @NonNull
     public Match toDomain(@NonNull MatchEntity entity) {
-        // Extract home and away teams from name field
         String homeTeam = "Unknown";
         String awayTeam = "Unknown";
-        if (entity.getName() != null && entity.getName().contains(" vs ")) {
-            String[] teams = entity.getName().split(" vs ");
-            if (teams.length == 2) {
-                homeTeam = teams[0].trim();
-                awayTeam = teams[1].trim();
-            }
-        }
 
-        // Extract scores from resultInfo
-        Integer homeScore = null;
-        Integer awayScore = null;
-        if (entity.getResultInfo() != null && entity.getResultInfo().contains(" - ")) {
-            try {
-                String[] scores = entity.getResultInfo().split(" - ");
-                if (scores.length == 2) {
-                    homeScore = Integer.parseInt(scores[0].trim());
-                    awayScore = Integer.parseInt(scores[1].trim());
-                }
-            } catch (NumberFormatException e) {
-                // If parsing fails, leave scores as null
-            }
-        }
+        Integer homeScore = entity.getHomeTeamScore();
+        Integer awayScore = entity.getAwayTeamScore();
 
-        // Map state ID to MatchStatus
-        MatchStatus status = mapStateIdToMatchStatus(entity.getStatusId());
+        MatchStatus status = mapStatusIdToMatchStatus(entity.getStatusId());
 
-        // Reconstruct domain Match
         Match match = Match.reconstitute(
                 entity.getId(),
                 homeTeam,
                 awayTeam,
-                entity.getLeague() != null ? entity.getLeague().getName() : null,
+                null,
                 entity.getStartingAt(),
                 status,
-                null, // previousStatus - not stored in new entity structure
+                null,
                 homeScore,
                 awayScore,
-                false // resultConfirmed - not stored in new entity structure
+                false
         );
 
         if (match == null) {
@@ -120,17 +70,11 @@ public class MatchMapper {
         return toDomain(entity);
     }
 
-    /**
-     * Maps MatchStatus enum to state ID.
-     * This is a simplified mapping. You should adjust based on your actual
-     * state ID scheme from the external API.
-     */
     static public Long mapMatchStatusToStatusId(MatchStatus status) {
         if (status == null) {
-            return 1L; // Default to NS (Not Started)
+            return 1L;
         }
 
-        // Simple mapping - adjust based on your actual API state IDs
         return switch (status) {
             case PENDING -> 0L;
             case TBA -> 1L;
@@ -156,21 +100,16 @@ public class MatchMapper {
             case ABANDONED -> 20L;
             case DELETED -> 21L;
             case AWAITING_UPDATES -> 22L;
-            default -> 1L; // Default to NS state
+            default -> 1L;
         };
     }
 
-    /**
-     * Maps state ID to MatchStatus enum.
-     * This is the reverse of mapMatchStatusToStateId.
-     */
-    private MatchStatus mapStateIdToMatchStatus(Integer stateId) {
-        if (stateId == null) {
+    private MatchStatus mapStatusIdToMatchStatus(Long statusId) {
+        if (statusId == null) {
             return MatchStatus.NS;
         }
 
-        // Simple mapping - adjust based on your actual API state IDs
-        return switch (stateId) {
+        return switch (statusId.intValue()) {
             case 0 -> MatchStatus.PENDING;
             case 1 -> MatchStatus.NS;
             case 2 -> MatchStatus.INPLAY_1ST_HALF;

@@ -25,4 +25,18 @@ public interface SpringDataMatchRepository extends JpaRepository<MatchEntity, Lo
     // Find matches by name containing (for team search)
     @Query("SELECT m FROM MatchEntity m WHERE m.name LIKE %:teamName%")
     List<MatchEntity> findByNameContaining(@Param("teamName") String teamName);
+
+    // Find by provider ID (SportMonks)
+    List<MatchEntity> findByProviderId(Long providerId);
+
+    // Exists by provider ID
+    boolean existsByProviderId(Long providerId);
+
+    // Find by provider ID + external match ID (unique combination)
+    @Query("SELECT m FROM MatchEntity m WHERE m.providerId = :providerId AND m.externalMatchId = :externalMatchId")
+    Optional<MatchEntity> findByProviderIdAndExternalMatchId(@Param("providerId") Long providerId, @Param("externalMatchId") Long externalMatchId);
+
+    // Exists by provider ID + external match ID
+    @Query("SELECT COUNT(m) > 0 FROM MatchEntity m WHERE m.providerId = :providerId AND m.externalMatchId = :externalMatchId")
+    boolean existsByProviderIdAndExternalMatchId(@Param("providerId") Long providerId, @Param("externalMatchId") Long externalMatchId);
 }

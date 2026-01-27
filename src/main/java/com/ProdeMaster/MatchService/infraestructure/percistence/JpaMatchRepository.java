@@ -105,6 +105,32 @@ public class JpaMatchRepository implements MatchRepository {
     }
 
     @Override
+    public boolean existsByProviderId(Long providerId) {
+        if (providerId == null) {
+            return false;
+        }
+        return jpaRepository.existsByProviderId(providerId);
+    }
+
+    @Override
+    public Optional<Match> findByProviderId(Long providerId) {
+        if (providerId == null) {
+            return Optional.empty();
+        }
+        List<MatchEntity> entities = jpaRepository.findByProviderId(providerId);
+        if (entities.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(mapper.toDomain(entities.get(0)));
+    }
+
+    @Override
+    public Optional<Match> findByProviderIdAndExternalMatchId(Long providerId, Long externalMatchId) {
+        Optional<MatchEntity> entity = jpaRepository.findByProviderIdAndExternalMatchId(providerId, externalMatchId);
+        return entity.map(mapper::toDomain);
+    }
+
+    @Override
     public void updateMatchScore(Long matchId, Integer homeTeamScore, Integer awayTeamScore) {
         // Load the domain match, update it, and save back
         Match match = findById(matchId).orElseThrow();
