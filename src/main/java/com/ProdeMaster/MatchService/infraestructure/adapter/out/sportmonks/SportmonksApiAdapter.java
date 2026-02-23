@@ -29,18 +29,19 @@ public class SportmonksApiAdapter implements FootballApiAdapter {
 
     private final RestClient restClient;
 
-    @Value("${sportmonks.token}")
-    private String token;
-
-    @Value("${sportmonks.base_url}")
-    private String baseUrl;
+    private final String token;
+    private final String baseUrl;
 
     @Autowired
-    public SportmonksApiAdapter(RestClient restClient) {
+    public SportmonksApiAdapter(RestClient restClient,
+            @Value("${sportmonks.token}") String token,
+            @Value("${sportmonks.base_url}") String baseUrl) {
         if (token == null || token.isEmpty() || baseUrl == null || baseUrl.isEmpty()) {
             throw new IllegalArgumentException("Sportmonks token or base url is required");
         }
         this.restClient = restClient;
+        this.token = token;
+        this.baseUrl = baseUrl;
     }
 
     @Override
