@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface SpringDataMatchRepository extends JpaRepository<MatchEntity, Long> {
 
@@ -34,9 +35,11 @@ public interface SpringDataMatchRepository extends JpaRepository<MatchEntity, Lo
 
     // Find by provider ID + external match ID (unique combination)
     @Query("SELECT m FROM MatchEntity m WHERE m.providerId = :providerId AND m.externalMatchId = :externalMatchId")
-    Optional<MatchEntity> findByProviderIdAndExternalMatchId(@Param("providerId") Long providerId, @Param("externalMatchId") Long externalMatchId);
+    Optional<MatchEntity> findByProviderIdAndExternalMatchId(@Param("providerId") Long providerId,
+            @Param("externalMatchId") Long externalMatchId);
 
     // Exists by provider ID + external match ID
     @Query("SELECT COUNT(m) > 0 FROM MatchEntity m WHERE m.providerId = :providerId AND m.externalMatchId = :externalMatchId")
-    boolean existsByProviderIdAndExternalMatchId(@Param("providerId") Long providerId, @Param("externalMatchId") Long externalMatchId);
+    boolean existsByProviderIdAndExternalMatchId(@Param("providerId") Long providerId,
+            @Param("externalMatchId") Long externalMatchId);
 }
