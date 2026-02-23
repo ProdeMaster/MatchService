@@ -67,13 +67,13 @@ public class Match implements Serializable {
     // ==================== INITIAL STATE TRANSITIONS ====================
 
     public void setToBeAnnounced() {
-        validateTransition(MatchStatus.TBA, EnumSet.of(MatchStatus.PENDING));
+        validateTransition(MatchStatus.TBA, EnumSet.of(MatchStatus.PENDING, MatchStatus.NS));
         this.status = MatchStatus.TBA;
     }
 
     public void setNotStarted() {
         validateTransition(MatchStatus.NS, EnumSet.of(MatchStatus.PENDING, MatchStatus.TBA, MatchStatus.POSTPONED,
-                MatchStatus.DELAYED));
+                MatchStatus.DELAYED, MatchStatus.NS));
         this.status = MatchStatus.NS;
     }
 
