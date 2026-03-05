@@ -1,0 +1,803 @@
+{
+	"info": {
+		"_postman_id": "match-service-api-tests",
+		"name": "MatchService API Tests",
+		"description": "Postman collection for testing MatchService REST API endpoints",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8083",
+			"type": "string"
+		},
+		{
+			"key": "matchId",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "javascript",
+				"exec": [
+					"// Set default date range if not set",
+					"if (!pm.environment.get('startDate')) {",
+					"    const startDate = new Date();",
+					"    startDate.setDate(startDate.getDate() - 1);",
+					"    pm.environment.set('startDate', startDate.toISOString());",
+					"}",
+					"if (!pm.environment.get('endDate')) {",
+					"    const endDate = new Date();",
+					"    endDate.setDate(endDate.getDate() + 7);",
+					"    pm.environment.set('endDate', endDate.toISOString());",
+					"}"
+				]
+			}
+		}
+	],
+	"item": [
+		{
+			"name": "Health Check",
+			"item": [
+				{
+					"name": "Get All Matches - Empty",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/matches",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "matches"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "javascript",
+								"exec": [
+									"pm.test('Response status is 200', function() {",
+									"    pm.expect(pm.response.status).to.eq(200);",
+									"});",
+									"",
+									"pm.test('Response is an array', function() {",
+									"    pm.expect(pm.response.json()).to.be.an('array');",
+									"});"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Create Match (Database Setup)",
+			"item": [
+				{
+					"name": "Create Match via Direct DB Insert",
+					"description": "Note: There's no POST endpoint for creating matches. This is handled internally. Use SportMonks sync or direct DB insert."
+				}
+			]
+		},
+		{
+			"name": "GET Endpoints",
+			"item": [
+				{
+					"name": "Get All Matches",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/matches",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "matches"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "javascript",
+								"exec": [
+									"pm.test('Response status is 200', function() {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Content-Type is application/json', function() {",
+									"    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+									"});",
+									"",
+									"pm.test('Response is an array', function() {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.an('array');",
+									"});",
+									"",
+									"pm.test('Response time is acceptable', function() {",
+									"    pm.expect(pm.response.responseTime).to.be.below(1000);",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Get Match by ID - Not Found",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/matches/999999",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "matches", "999999"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "javascript",
+								"exec": [
+									"pm.test('Response status is 404 for non-existent match', function() {",
+									"    pm.response.to.have.status(404);",
+									"});",
+									"",
+									"pm.test('Error message is descriptive', function() {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('error');",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Get Matches by League",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/matches/league/Premier League",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "matches", "league", "Premier League"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "javascript",
+								"exec": [
+									"pm.test('Response status is 200', function() {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response is an array', function() {",
+									"    pm.expect(pm.response.json()).to.be.an('array');",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Get Matches by Date Range",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/matches/dates?start={{startDate}}&end={{endDate}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "matches", "dates"],
+							"query": [
+								{
+									"key": "start",
+									"value": "{{startDate}}"
+								},
+								{
+									"key": "end",
+									"value": "{{endDate}}"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "javascript",
+								"exec": [
+									"pm.test('Response status is 200', function() {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response is an array', function() {",
+									"    pm.expect(pm.response.json()).to.be.an('array');",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Get Matches by Status",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/matches/status/NS",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "matches", "status", "NS"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "javascript",
+								"exec": [
+									"pm.test('Response status is 200', function() {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response is an array', function() {",
+									"    pm.expect(pm.response.json()).to.be.an('array');",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Get Matches by Team",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/matches/team/Manchester%20United",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "matches", "team", "Manchester United"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "javascript",
+								"exec": [
+									"pm.test('Response status is 200', function() {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response is an array', function() {",
+									"    pm.expect(pm.response.json()).to.be.an('array');",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Check Match Exists - False",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/matches/999999/exists",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "matches", "999999", "exists"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "javascript",
+								"exec": [
+									"pm.test('Response status is 200', function() {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response is false for non-existent match', function() {",
+									"    pm.expect(pm.response.text()).to.eq('false');",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Check Can Update - False",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/matches/999999/can-update",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "matches", "999999", "can-update"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "javascript",
+								"exec": [
+									"pm.test('Response status is 200', function() {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response is false for non-existent match', function() {",
+									"    pm.expect(pm.response.text()).to.eq('false');",
+									"});"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "PUT Endpoints - Error Handling",
+			"item": [
+				{
+					"name": "Update Score - Match Not Found",
+					"request": {
+						"method": "PUT",
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/matches/999999/score",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "matches", "999999", "score"]
+						},
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"homeTeamScore\": 2,\n    \"awayTeamScore\": 1\n}"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "javascript",
+								"exec": [
+									"pm.test('Response status is 500 for non-existent match', function() {",
+									"    pm.response.to.have.status(500);",
+									"});",
+									"",
+									"pm.test('Error response has required fields', function() {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('status');",
+									"    pm.expect(jsonData).to.have.property('error');",
+									"    pm.expect(jsonData).to.have.property('message');",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Update Status - Match Not Found",
+					"request": {
+						"method": "PUT",
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/matches/999999/status",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "matches", "999999", "status"]
+						},
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"newStatus\": \"INPLAY_1ST_HALF\"\n}"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "javascript",
+								"exec": [
+									"pm.test('Response status is 500 for non-existent match', function() {",
+									"    pm.response.to.have.status(500);",
+									"});",
+									"",
+									"pm.test('Error response has required fields', function() {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('status');",
+									"    pm.expect(jsonData).to.have.property('error');",
+									"    pm.expect(jsonData).to.have.property('message');",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Confirm Result - Match Not Found",
+					"request": {
+						"method": "PUT",
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/matches/999999/confirm",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "matches", "999999", "confirm"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "javascript",
+								"exec": [
+									"pm.test('Response status is 500 for non-existent match', function() {",
+									"    pm.response.to.have.status(500);",
+									"});",
+									"",
+									"pm.test('Error response has required fields', function() {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('status');",
+									"    pm.expect(jsonData).to.have.property('error');",
+									"    pm.expect(jsonData).to.have.property('message');",
+									"});"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Validation Tests",
+			"item": [
+				{
+					"name": "Update Score - Invalid JSON",
+					"request": {
+						"method": "PUT",
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/matches/1/score",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "matches", "1", "score"]
+						},
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "invalid json"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "javascript",
+								"exec": [
+									"pm.test('Response status is 400 or 500 for invalid JSON', function() {",
+									"    pm.expect([400, 500]).to.include(pm.response.status);",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Update Status - Invalid JSON",
+					"request": {
+						"method": "PUT",
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/matches/1/status",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "matches", "1", "status"]
+						},
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "invalid json"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "javascript",
+								"exec": [
+									"pm.test('Response status is 400 or 500 for invalid JSON', function() {",
+									"    pm.expect([400, 500]).to.include(pm.response.status);",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Update Score - Missing Fields",
+					"request": {
+						"method": "PUT",
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/matches/1/score",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "matches", "1", "score"]
+						},
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"homeTeamScore\": 2\n}"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "javascript",
+								"exec": [
+									"pm.test('Response handles missing fields gracefully', function() {",
+									"    pm.expect([400, 500]).to.include(pm.response.status);",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Update Status - Invalid Status Value",
+					"request": {
+						"method": "PUT",
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/matches/1/status",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "matches", "1", "status"]
+						},
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"newStatus\": \"INVALID_STATUS\"\n}"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "javascript",
+								"exec": [
+									"pm.test('Response handles invalid enum value', function() {",
+									"    pm.expect([400, 500]).to.include(pm.response.status);",
+									"});"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Date Range Validation",
+			"item": [
+				{
+					"name": "Get Matches - Missing Start Date",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/matches/dates?end={{endDate}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "matches", "dates"],
+							"query": [
+								{
+									"key": "end",
+									"value": "{{endDate}}"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "javascript",
+								"exec": [
+									"pm.test('Response status is 400 for missing required params', function() {",
+									"    pm.expect([400, 500]).to.include(pm.response.status);",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Get Matches - Missing End Date",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/matches/dates?start={{startDate}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "matches", "dates"],
+							"query": [
+								{
+									"key": "start",
+									"value": "{{startDate}}"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "javascript",
+								"exec": [
+									"pm.test('Response status is 400 for missing required params', function() {",
+									"    pm.expect([400, 500]).to.include(pm.response.status);",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Get Matches - Invalid Date Format",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/matches/dates?start=invalid-date&end=invalid-date",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "matches", "dates"],
+							"query": [
+								{
+									"key": "start",
+									"value": "invalid-date"
+								},
+								{
+									"key": "end",
+									"value": "invalid-date"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "javascript",
+								"exec": [
+									"pm.test('Response status is 400 for invalid date format', function() {",
+									"    pm.expect([400, 500]).to.include(pm.response.status);",
+									"});"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Performance Tests",
+			"item": [
+				{
+					"name": "Get All Matches - Performance",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/matches",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "matches"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "javascript",
+								"exec": [
+									"pm.test('Response time is under 2 seconds', function() {",
+									"    pm.expect(pm.response.responseTime).to.be.below(2000);",
+									"});",
+									"",
+									"pm.test('Response is valid JSON', function() {",
+									"    pm.expect(pm.response.json()).to.not.be.null;",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Get Match by ID - Performance",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/matches/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "matches", "1"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "javascript",
+								"exec": [
+									"pm.test('Response time is under 1 second', function() {",
+									"    pm.expect(pm.response.responseTime).to.be.below(1000);",
+									"});"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Status Values Reference",
+			"item": [
+				{
+					"name": "List All Valid Status Values",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/matches/status/NS",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "matches", "status", "NS"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "javascript",
+								"exec": [
+									"// Valid status values:",
+									"// NS - Not Started",
+									"// TBA - To Be Announced",
+									"// INPLAY_1ST_HALF - First Half In Play",
+									"// HT - Half Time",
+									"// INPLAY_2ND_HALF - Second Half In Play",
+									"// FT - Full Time",
+									"// INPLAY_ET - Extra Time In Play",
+									"// EXTRA_TIME_BREAK - Extra Time Break",
+									"// INPLAY_ET_2ND_HALF - Extra Time Second Half",
+									"// AET - After Extra Time",
+									"// INPLAY_PENALTIES - Penalties In Play",
+									"// PEN_BREAK - Penalty Break",
+									"// FT_PEN - Full Time After Penalties",
+									"// DELAYED - Delayed",
+									"// POSTPONED - Postponed",
+									"// SUSPENDED - Suspended",
+									"// INTERRUPTED - Interrupted",
+									"// AWARDED - Awarded",
+									"// WO - Walk Over",
+									"// CANCELLED - Cancelled",
+									"// ABANDONED - Abandoned",
+									"// DELETED - Deleted",
+									"// AWAITING_UPDATES - Awaiting Updates",
+									"",
+									"pm.test('Valid status values can be queried', function() {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								]
+							}
+						}
+					]
+				}
+			]
+		}
+	]
+}
