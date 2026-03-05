@@ -62,7 +62,7 @@ services:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_ZIPKIN_BASE_URL: http://zipkin:9411
       EUREKA_CLIENT_ENABLED: "false"
-      SPORTMONKS_TOKEN: "${SPORTMONKS_TOKEN:-ChangeMe}"
+      SPORTMONKS_TOKEN: ${SPORTMONKS_TOKEN}
     depends_on:
       - postgres
       - valkey

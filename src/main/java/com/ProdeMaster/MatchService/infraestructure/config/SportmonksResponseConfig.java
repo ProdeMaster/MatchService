@@ -9,7 +9,7 @@ import org.springframework.web.client.RestClient;
 @Configuration
 public class SportmonksResponseConfig {
 
-    @Value("${sportmonks.baseUrl}")
+    @Value("${sportmonks.base_url}")
     private String baseUrl;
 
     // @Value("${sportmonks.token}")

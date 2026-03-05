@@ -6,21 +6,16 @@ import com.ProdeMaster.MatchService.application.port.out.api.FootballApiAdapter;
 import com.ProdeMaster.MatchService.application.port.out.cache.MatchCacheRepository;
 import com.ProdeMaster.MatchService.application.port.out.db.MatchRepository;
 import com.ProdeMaster.MatchService.domain.model.Match;
-import com.ProdeMaster.MatchService.domain.model.MatchStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
-@Service
 public class MatchSyncServiceImpl implements MatchSyncService {
 
     private static final Logger log = LoggerFactory.getLogger(MatchSyncServiceImpl.class);
-    private static final DateTimeFormatter DATETIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     // For the MVP, the Sportmonks ID is hardcoded, the sole provider.
     private static final Long SPORTMONKS_PROVIDER_ID = 1L;
 
@@ -111,15 +106,6 @@ public class MatchSyncServiceImpl implements MatchSyncService {
                 matchDateTime = apiAdapter.parseToLocalDateTime(dto.getMatchDateTime());
             } catch (Exception e) {
                 log.warn("Could not parse date: {}", dto.getMatchDateTime());
-            }
-        }
-
-        MatchStatus status = MatchStatus.NS;
-        if (dto.getStatus() != null) {
-            try {
-                status = MatchStatus.valueOf(dto.getStatus());
-            } catch (IllegalArgumentException e) {
-                log.warn("Unknown status: {}", dto.getStatus());
             }
         }
 
